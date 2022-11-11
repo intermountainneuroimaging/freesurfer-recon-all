@@ -41,12 +41,15 @@ RUN wget \
     && bash Miniconda3-py38_4.8.3-Linux-x86_64.sh -b \
     && rm -f Miniconda3-py38_4.8.3-Linux-x86_64.sh
 
+#install conda-build
+RUN conda install conda-build
+
 # Installing precomputed python packages
 RUN conda install -y python=3.8.5 && \
     chmod -R a+rX /root; sync && \
     chmod +x /root/miniconda3/bin/*; sync && \
     conda build purge-all; sync && \
-    conda clean -tipsy && sync
+    conda clean --all -y && sync
 
 COPY requirements.txt /tmp
 RUN pip install -r /tmp/requirements.txt && \

@@ -830,22 +830,31 @@ def main(gtk_context):
     set_core_count(config, log)
 
     # grab environment for gear (saved in Dockerfile)
-    with open(FLYWHEEL_BASE / "gear_environ.json", "r") as f:
-        environ = json.load(f)
+    environ = os.environ
+    environ['SUBJECTS_DIR'] = str(SUBJECTS_DIR)
 
-        # use our subjects_dir
-        environ['SUBJECTS_DIR'] = str(SUBJECTS_DIR)
+    # Add environment to log if debugging
+    kv = ""
+    for k, v in environ.items():
+        kv += k + "=" + v + " "
+    log.debug("Environment: " + kv)
 
-        # Add environment to log if debugging
-        kv = ""
-        for k, v in environ.items():
-            kv += k + "=" + v + " "
-        log.debug("Environment: " + kv)
+    # with open(FLYWHEEL_BASE / "gear_environ.json", "r") as f:
+    #     environ = json.load(f)
+
+        # # use our subjects_dir
+        # environ['SUBJECTS_DIR'] = str(SUBJECTS_DIR)
+
+        # # Add environment to log if debugging
+        # kv = ""
+        # for k, v in environ.items():
+        #     kv += k + "=" + v + " "
+        # log.debug("Environment: " + kv)
 
     # get config for command by skipping gear config parameters
     command_config = {}
     for key, val in config.items():
-        if not key.startswith("gear-"):
+        if not key.startswith("gear-") and not key.startswith("slurm-"):
             command_config[key] = val
 
     expert_path = gtk_context.get_input_path("expert")
@@ -988,8 +997,8 @@ def main(gtk_context):
 if __name__ == "__main__":
 
     # always run in a newly created "scratch" directory in /tmp/...
-    scratch_dir = run_in_tmp_dir()
-    config_path = scratch_dir / 'config.json'
+    with flywheel_gear_toolkit.GearToolkitContext() as gear_context:
+        scratch_dir = run_in_tmp_dir(gear_context.config["gear-writable-dir"])
 
     # reset globals (poor form changing constants)
     global FLYWHEEL_BASE
@@ -1009,7 +1018,9 @@ if __name__ == "__main__":
     for fs_subj in Path(os.environ['SUBJECTS_DIR']).glob('*'):
         (SUBJECTS_DIR / fs_subj.name).symlink_to(fs_subj)
 
-    with flywheel_gear_toolkit.GearToolkitContext(config_path='/flywheel/v0/config.json') as gtk_context:
+    # Has to be instantiated twice here, since parent directories might have
+    # changed
+    with flywheel_gear_toolkit.GearToolkitContext() as gtk_context:
         return_code = main(gtk_context)
 
     # clean up (might be necessary when running in a shared computing environment)
