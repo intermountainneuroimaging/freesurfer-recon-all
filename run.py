@@ -839,18 +839,6 @@ def main(gtk_context):
         kv += k + "=" + v + " "
     log.debug("Environment: " + kv)
 
-    # with open(FLYWHEEL_BASE / "gear_environ.json", "r") as f:
-    #     environ = json.load(f)
-
-        # # use our subjects_dir
-        # environ['SUBJECTS_DIR'] = str(SUBJECTS_DIR)
-
-        # # Add environment to log if debugging
-        # kv = ""
-        # for k, v in environ.items():
-        #     kv += k + "=" + v + " "
-        # log.debug("Environment: " + kv)
-
     # get config for command by skipping gear config parameters
     command_config = {}
     for key, val in config.items():
